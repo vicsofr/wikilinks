@@ -1,0 +1,2 @@
+class WikiLinksException(Exception):
+    pass

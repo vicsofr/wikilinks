@@ -11,6 +11,8 @@ from exception import WikiLinksException
 def link_name(link: str) -> str:
     """
     Converts link from url to short name
+    :param link: web URL
+    :return: Wiki page name
     """
     split_link = link.split('/')
     normal_name = ' '.join(split_link[-1].split('_'))
@@ -19,7 +21,9 @@ def link_name(link: str) -> str:
 
 def clean_paragraph(paragraph: BeautifulSoup) -> str:
     """
-    Cleaning BeautifulSoup's object text from unnecessary stuff
+    Cleaning BeautifulSoup's object text from unnecessary stuff :)
+    :param paragraph: html-p content to clean from any 'garbage'
+    :return: cleaned content
     """
     cleaned = re.sub(r'\[(.*?\d)\]', '', paragraph.getText(strip=False).replace("\xa0", " "))
     return cleaned
@@ -28,7 +32,7 @@ def clean_paragraph(paragraph: BeautifulSoup) -> str:
 def validate_link(link: str) -> str:
     """
     Validates input link if URL belongs to Wikipedia pages. Only Russian segment for now
-    :param link: full or short URL
+    :param link: full or short URL to validate
     :return: validated URL
     """
     split_link = link.split('/')
@@ -50,12 +54,19 @@ def validate_link(link: str) -> str:
         return link
 
 
-def write_log(log_link):
+def write_log(log_link: str):
+    """
+    Writing received link into a log-file
+    :param log_link: searching part of a link
+    """
     with open('entry_log.txt', 'a+') as file:
         file.write(f'[{datetime.now()}] {BASE_URL}/{log_link}\n')
 
 
 def clear_log():
+    """
+    Clearing log-file
+    """
     path = 'entry_log.txt'
     try:
         open(path, 'w').close()

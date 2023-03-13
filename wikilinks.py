@@ -22,7 +22,7 @@ class WikiLinks:
     def __init__(self, first_link, second_link):
         self.first_link = first_link
         self.second_link = second_link
-        self.cache = set()
+        self.simple_cache = set()
         self.relation = {
             1: dict(),
             2: dict(),
@@ -40,6 +40,7 @@ class WikiLinks:
         Sending request to Wikipedia page and returns html content. Appending html to list for workers
         :param url_part: url_part for sending request or writing it in relations dict
         :param html_pages: list of html pages from worker to parse later
+        :return: page html-content
         """
         related_link = url_part
         url = f'{BASE_URL}/{url_part}'
@@ -54,10 +55,11 @@ class WikiLinks:
         return html_content
 
     @staticmethod
-    def parse_links(link_html: str) -> dict or str:
+    def parse_links(link_html: str) -> dict:
         """
-        Returns links list from Wiki page html
+        Parsing received html-content and returning link with a sentence where it was found
         :param link_html: Wiki page html
+        :return: dict() where parsed link is a key and sentence is a value
         """
         parsed_links = dict()
 
@@ -112,14 +114,17 @@ class WikiLinks:
 
         return path
 
-    def search_path(self) -> dict or bool:
+    def search_path(self, max_depth: int = 3) -> dict or bool:
         """
-        Method called from main part. Organising parsing and searching for goal link
+        Method called from __main__ part. Organising parsing and searching for goal link.
+        :param max_depth: max searching depth, default = 3
+        :return: path to goal link or False
         """
         first_link = self.first_link
         second_link = self.second_link
+        restrict_depth = max_depth - 1
 
-        cache = self.cache
+        cache = self.simple_cache
         link_simple_tree = self.link_simple_tree
         relations = self.relation
 
@@ -128,7 +133,7 @@ class WikiLinks:
         logger.info('The search has begun!')
 
         while True:
-            if level > 2:
+            if level > restrict_depth:
                 return False
 
             logger.info(f'Searching at depth {level + 1} ...')
@@ -178,7 +183,8 @@ if __name__ == '__main__':
         second_name = link_name(second_url)
 
         wikilinks = WikiLinks(first_url, second_url)
-        result = wikilinks.search_path()
+        result = wikilinks.search_path(max_depth=3)
+
         if result:
             logger.info(f'\n ------ Path from "{first_name}" to "{second_name}" ------ \n')
             for step in [result['first'], result['second'], result['third']]:

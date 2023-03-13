@@ -192,7 +192,3 @@ if __name__ == '__main__':
             logger.info('\nPath not found :(')
     except KeyboardInterrupt or WikiLinksException:
         logger.info('\nEnding...')
-
-# https://ru.wikipedia.org/wiki/Файл:Hellas.ogg
-# https://ru.wikipedia.org/wiki/Паспорт_гражданина_Сербии
-# https://ru.wikipedia.org/wiki/Птаха_(рэпер)

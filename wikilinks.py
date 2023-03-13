@@ -20,8 +20,9 @@ logger.addHandler(handler)
 
 class WikiLinks:
     def __init__(self, first_link, second_link):
-        self.first_link = validate_link(first_link)
-        self.second_link = validate_link(second_link)
+        self.first_link = first_link
+        self.second_link = second_link
+        self.cache = set()
         self.relation = {
             1: dict(),
             2: dict(),
@@ -118,6 +119,10 @@ class WikiLinks:
         first_link = self.first_link
         second_link = self.second_link
 
+        cache = self.cache
+        link_simple_tree = self.link_simple_tree
+        relations = self.relation
+
         level = 0
         link_heap = [first_link]
         logger.info('The search has begun!')
@@ -133,7 +138,10 @@ class WikiLinks:
                 threads = []
                 for i in range(100):
                     if link_heap:
-                        t = Thread(target=self.get_html_page, args=(link_heap.pop(), html_pages))
+                        current_link = link_heap.pop()
+                        t = Thread(target=self.get_html_page, args=(current_link, html_pages))
+                        cache.add(current_link)
+                        write_log(current_link)
                         threads.append(t)
                         t.start()
                 for thread in threads:
@@ -141,9 +149,8 @@ class WikiLinks:
                 for html_page in html_pages:
                     parsed_links = self.parse_links(html_page[0])
                     for parsed_link, article in parsed_links.items():
-                        write_log(parsed_link)
-                        self.link_simple_tree[level + 1][parsed_link] = article
-                        self.relation[level + 1][parsed_link] = html_page[1]
+                        link_simple_tree[level + 1][parsed_link] = article
+                        relations[level + 1][parsed_link] = html_page[1]
                         if parsed_link == second_link:
                             path = self.build_path(parsed_link, level + 1)
                             return path
@@ -151,8 +158,9 @@ class WikiLinks:
 
             if not link_heap:
                 level += 1
-                for tree_link in self.link_simple_tree[level].keys():
-                    link_heap.append(tree_link)
+                for tree_link in link_simple_tree[level].keys():
+                    if tree_link not in cache:
+                        link_heap.append(tree_link)
 
 
 if __name__ == '__main__':
@@ -161,13 +169,12 @@ if __name__ == '__main__':
     sample_two = 'https://ru.wikipedia.org/wiki/Nintendo_3DS'
 
     try:
-        first_url = str(validate_link(input('Write URL you want to start searching from '
-                                            '(or tap Enter to go with example URL):')) or sample_one)
+        first_url = validate_link(str(input('\n-> Write URL you want to start searching from '
+                                            '(or tap Enter for example URL):') or sample_one))
         first_name = link_name(first_url)
-        write_log(validate_link(first_url))
 
-        second_url = str(validate_link(input('Write URL you want to find '
-                                             '(or tap Enter to go with example URL):')) or sample_two)
+        second_url = validate_link(str(input('-> Write URL you want to find '
+                                             '(or tap Enter for example URL):\n')) or sample_two)
         second_name = link_name(second_url)
 
         wikilinks = WikiLinks(first_url, second_url)
@@ -176,8 +183,8 @@ if __name__ == '__main__':
             logger.info(f'\n ------ Path from "{first_name}" to "{second_name}" ------ \n')
             for step in [result['first'], result['second'], result['third']]:
                 if step:
-                    for link, sent in step.items():
-                        logger.info(f'\n{sent}')
+                    for link, sentence in step.items():
+                        logger.info(f'\n{sentence}')
                         logger.info(f'-> {BASE_URL + "/" + link} <-\n')
         else:
             logger.info('Path not found :(')

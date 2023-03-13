@@ -3,6 +3,7 @@ import logging
 from logging import StreamHandler
 from urllib.parse import unquote
 from threading import Thread
+from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
@@ -64,7 +65,8 @@ class WikiLinks:
                 for a_tag in a_tags:
                     if a_tag.has_attr('href') and a_tag['href'][:6] == '/wiki/':
                         clean_link = unquote(a_tag['href'][6:])
-                        parsed_links[clean_link] = cleaned_p
+                        if not clean_link.split(':')[0] == 'Файл':
+                            parsed_links[clean_link] = cleaned_p
         return parsed_links
 
     def build_path(self, found_link: str, level: int) -> dict:
@@ -105,7 +107,7 @@ class WikiLinks:
 
         level = 0
         link_heap = [first_link]
-        logger.info('\n* The search has begun! *')
+        logger.info('\n* The search has begun! *\n')
 
         while True:
             if level > restrict_depth:
@@ -116,7 +118,7 @@ class WikiLinks:
             while link_heap:
                 html_pages = []
                 threads = []
-                for i in range(100):
+                for i in range(500):
                     if link_heap:
                         current_link = link_heap.pop()
                         t = Thread(target=self.get_html_page, args=(current_link, html_pages))
@@ -155,17 +157,16 @@ class WikiLinks:
 
 
 if __name__ == '__main__':
-    from settings import MAX_DEPTH
     clear_log()
     sample_one = 'https://ru.wikipedia.org/wiki/Xbox_360_S'
     sample_two = 'https://ru.wikipedia.org/wiki/Nintendo_3DS'
 
     try:
-        first_url = validate_link(str(input('\n-> Write URL you want to start searching from '
+        first_url = validate_link(str(input('\n-> Paste URL you want to start searching from '
                                             '(or tap Enter for example URL): ') or sample_one))
         first_name = link_name(first_url)
 
-        second_url = validate_link(str(input('-> Write URL you want to find '
+        second_url = validate_link(str(input('-> Paste URL you want to find '
                                              '(or tap Enter for example URL): ')) or sample_two)
         second_name = link_name(second_url)
 
@@ -173,6 +174,7 @@ if __name__ == '__main__':
 
         wikilinks = WikiLinks(first_url, second_url)
         result = wikilinks.search_path(depth=max_depth)
+        time_start = datetime.now()
 
         if result:
             logger.info(f'\n ------ Path from "{first_name}" to "{second_name}" ------ \n')
@@ -183,7 +185,14 @@ if __name__ == '__main__':
                         logger.info(f'-> {BASE_URL + "/" + link} <-\n')
                 except KeyError:
                     pass
+            search_time = datetime.now() - time_start
+            write_log(f'Search time: {search_time}')
+            logger.info(f'\nSearch time: {search_time}')
         else:
-            logger.info('Path not found :(')
+            logger.info('\nPath not found :(')
     except KeyboardInterrupt or WikiLinksException:
         logger.info('\nEnding...')
+
+# https://ru.wikipedia.org/wiki/Файл:Hellas.ogg
+# https://ru.wikipedia.org/wiki/Паспорт_гражданина_Сербии
+# https://ru.wikipedia.org/wiki/Птаха_(рэпер)

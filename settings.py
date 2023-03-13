@@ -1,4 +1,5 @@
 BASE_URL = 'https://ru.wikipedia.org/wiki'
+MAX_DEPTH = 3
 ERRORS = {
     'connection': 'Cannot connect to the specified URL',
     'wrong_url': 'Wrong URL!',

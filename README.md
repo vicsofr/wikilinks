@@ -7,7 +7,7 @@
 
 ####
 #### *Input*: 
-- ссылка, с которой начинается поиск (по дефолту: https://ru.wikipedia.org/wiki/Xbox_360_S 
+- ссылка, с которой начинается поиск (по дефолту: https://ru.wikipedia.org/wiki/Xbox_360_S)
 - ссылка, которую нужно найти (по дефолту: https://ru.wikipedia.org/wiki/Nintendo_3DS)
 - глубина поиска (дефолтная задаётся в settings в параметре MAX_DEPTH, равна 3)
 #### *Output*: 
